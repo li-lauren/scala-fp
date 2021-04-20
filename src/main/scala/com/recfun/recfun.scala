@@ -13,6 +13,8 @@ object recfun {
     println(balance("I told him (that it’s not (yet) done). (But he wasn’t listening)".toList))
     println(balance(":-)".toList))
     println(balance("(()(".toList))
+    println("Count Change")
+    println(countChange(3, List(1,2,3)))
   }
 
   /**
@@ -53,6 +55,8 @@ object recfun {
    * Exercise 3
    */
   def countChange(money: Int, coins: List[Int]): Int = {
-    
+    if (money == 0) 1
+    else if (money < 0 || coins.isEmpty) 0
+    else countChange(money, coins.tail) + countChange(money - coins.head, coins)
   }
 }
