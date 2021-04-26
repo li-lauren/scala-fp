@@ -134,7 +134,7 @@ class Empty extends TweetSet{
 }
 
 class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
-  def union(that: TweetSet): TweetSet = (left union right) union that incl elem
+  def union(that: TweetSet): TweetSet = left union right union that incl elem
 
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet =
     if (p(elem)) left filterAcc(p, right filterAcc(p, acc incl elem))
@@ -212,11 +212,11 @@ object GoogleVsApple {
   val google = List("android", "Android", "galaxy", "Galaxy", "nexus", "Nexus")
   val apple = List("ios", "iOS", "iphone", "iPhone", "ipad", "iPad")
 
-  //val allTweets = TweetReader.allTweets
+  lazy val tweets = TweetReader.allTweets
 
-  lazy val googleTweets: TweetSet = allTweets.keywordTweets(google)
+  lazy val googleTweets: TweetSet = tweets.keywordTweets(google)
 
-  lazy val appleTweets: TweetSet = allTweets.keywordTweets(apple)
+  lazy val appleTweets: TweetSet = tweets.keywordTweets(apple)
 
   /**
    * A list of all tweets mentioning a keyword from either apple or google,
@@ -228,10 +228,10 @@ object GoogleVsApple {
 
 object Main extends App {
   val tweet1 = new Tweet("blah", "blah", 2)
-  val tweet2 = new Tweet("blah", "bloo", 3)
-  val testSet = new NonEmpty(tweet1, new Empty, new Empty)
-  val newTestSet = testSet incl tweet2
-//  val test = allTweets incl tweet1
+//  val tweet2 = new Tweet("blah", "bloo", 3)
+//  val testSet = new NonEmpty(tweet1, new Empty, new Empty)
+//  val newTestSet = testSet incl tweet2
+  //val test = allTweets incl tweet1
 //  test foreach println
 //  println(newTestSet.filter(tweet => tweet.retweets > 2))
 //  println(newTestSet.mostRetweeted.text)
@@ -243,8 +243,8 @@ object Main extends App {
   //allTweets foreach println
   //GoogleVsApple.googleTweets foreach println
   //println(allTweets.filter(tweet => tweet.retweets > 10))
-  //allTweets.filter(tweet => tweet.retweets > 10) foreach println
+  allTweets.filter(tweet => tweet.retweets > 10)
   //GoogleVsApple.trending foreach println
 
-  //println("hi")
+  println("hi")
 }
