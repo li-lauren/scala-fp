@@ -26,7 +26,10 @@ trait Huffman extends HuffmanInterface {
     case Fork(l, r, chs, w) => w
   } // tree match ...
 
-  def chars(tree: CodeTree): List[Char] = ??? // tree match ...
+  def chars(tree: CodeTree): List[Char] = tree match {
+    case Leaf(char, w) => List(char)
+    case Fork(l, r, chs, w) => chs
+  } // tree match ...
 
   def makeCodeTree(left: CodeTree, right: CodeTree) =
     Fork(left, right, chars(left) ::: chars(right), weight(left) + weight(right))
@@ -83,7 +86,22 @@ trait Huffman extends HuffmanInterface {
    * head of the list should have the smallest weight), where the weight
    * of a leaf is the frequency of the character.
    */
-  def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = ???
+  def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = {
+    def insert(x: (Char, Int), freqs: List[(Char, Int)]): List[(Char, Int)] = freqs match {
+      case List() => List(x)
+      case y :: ys => if (x._2 <= y._2) x :: freqs else y :: insert(x, ys)
+    }
+    def isort(freqs: List[(Char, Int)]): List[(Char,Int)] = freqs match {
+      case List() => List()
+      case y :: ys => insert(y, isort(ys))
+    }
+
+    def convertToLeaves(freqs: List[(Char, Int)]): List[Leaf] = freqs match {
+      case List() => List()
+      case y :: ys => Leaf(y._1, y._2) :: convertToLeaves(ys)
+    }
+    convertToLeaves(isort(freqs))
+  }
 
   /**
    * Checks whether the list `trees` contains only one single code tree.
@@ -204,4 +222,6 @@ object Huffman extends Huffman
 object Main extends App {
   println("Test")
   println(Huffman.times(Huffman.string2Chars("banana")))
+  val charCountLst = Huffman.times(Huffman.string2Chars("bananaloaf"))
+  println(Huffman.makeOrderedLeafList(charCountLst))
 }
