@@ -106,7 +106,11 @@ trait Huffman extends HuffmanInterface {
   /**
    * Checks whether the list `trees` contains only one single code tree.
    */
-  def singleton(trees: List[CodeTree]): Boolean = ???
+  def singleton(trees: List[CodeTree]): Boolean = trees match {
+    case Nil => false
+    case List(x) => true
+    case _ => false
+  }
 
   /**
    * The parameter `trees` of this function is a list of code trees ordered
@@ -120,7 +124,23 @@ trait Huffman extends HuffmanInterface {
    * If `trees` is a list of less than two elements, that list should be returned
    * unchanged.
    */
-  def combine(trees: List[CodeTree]): List[CodeTree] = ???
+  def smallestTrees(trees: List[CodeTree]): (Fork, List[CodeTree]) = trees match {
+    case x :: y :: rest => (makeCodeTree(x, y), rest)
+  }
+
+  def insertTree(x: CodeTree, trees: List[CodeTree]): List[CodeTree] = trees match {
+    case List() => List(x)
+    case y :: ys =>
+      if (weight(x) <= weight(y)) x :: trees else y :: insertTree(x, ys)
+  }
+
+  def combine(trees: List[CodeTree]): List[CodeTree] = trees match {
+    case Nil => trees
+    case x :: Nil => trees
+    case _ =>
+      val(newFork, remainingTrees) = smallestTrees(trees)
+      insertTree(newFork,remainingTrees)
+  }
 
   /**
    * This function will be called in the following way:
@@ -133,7 +153,9 @@ trait Huffman extends HuffmanInterface {
    * In such an invocation, `until` should call the two functions until the list of
    * code trees contains only one single tree, and then return that singleton list.
    */
-  def until(done: List[CodeTree] => Boolean, merge: List[CodeTree] => List[CodeTree])(trees: List[CodeTree]): List[CodeTree] = ???
+  def until(done: List[CodeTree] => Boolean, merge: List[CodeTree] => List[CodeTree])(trees: List[CodeTree]): List[CodeTree] =
+    if (done(trees)) trees
+    else until(done, merge)(merge(trees))
 
   /**
    * This function creates a code tree which is optimal to encode the text `chars`.
@@ -220,8 +242,13 @@ trait Huffman extends HuffmanInterface {
 object Huffman extends Huffman
 
 object Main extends App {
+  import Huffman._
   println("Test")
-  println(Huffman.times(Huffman.string2Chars("banana")))
-  val charCountLst = Huffman.times(Huffman.string2Chars("bananaloaf"))
-  println(Huffman.makeOrderedLeafList(charCountLst))
+  println(times(Huffman.string2Chars("banana")))
+  val charCountLst = times(string2Chars("bananaloaf"))
+  println(makeOrderedLeafList(charCountLst))
+  val leaflist = List(Leaf('e', 1), Leaf('t', 2), Leaf('x', 4))
+  println(combine(leaflist))
+  println(List(Fork(Leaf('e',1),Leaf('t',2),List('e', 't'),3), Leaf('x',4)) == combine(leaflist))
+  println(until(singleton, combine)(leaflist))
 }
