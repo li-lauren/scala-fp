@@ -163,7 +163,7 @@ trait Huffman extends HuffmanInterface {
    * The parameter `chars` is an arbitrary text. This function extracts the character
    * frequencies from that text and creates a code tree based on them.
    */
-  def createCodeTree(chars: List[Char]): CodeTree = ???
+  def createCodeTree(chars: List[Char]): CodeTree = until(singleton, combine)(makeOrderedLeafList(times(chars))).head
 
 
   // Part 3: Decoding
@@ -174,7 +174,18 @@ trait Huffman extends HuffmanInterface {
    * This function decodes the bit sequence `bits` using the code tree `tree` and returns
    * the resulting list of characters.
    */
-  def decode(tree: CodeTree, bits: List[Bit]): List[Char] = ???
+  def decode(tree: CodeTree, bits: List[Bit]): List[Char] = {
+
+    def _decode(currTree: CodeTree, bits: List[Bit], decodedChars: List[Char]): List[Char] = currTree match {
+      case Leaf(c, w) =>
+        _decode(tree, bits, decodedChars ::: List(c))
+      case Fork(l, r, c, w) => bits match {
+        case Nil => decodedChars
+        case x :: xs => if (x == 0) _decode(l, xs, decodedChars) else _decode(r, xs, decodedChars)
+      }
+    }
+    _decode(tree, bits, List[Char]())
+  }
 
   /**
    * A Huffman coding tree for the French language.
@@ -192,7 +203,7 @@ trait Huffman extends HuffmanInterface {
   /**
    * Write a function that returns the decoded secret
    */
-  def decodedSecret: List[Char] = ???
+  def decodedSecret: List[Char] = decode(frenchCode, secret)
 
 
   // Part 4a: Encoding using Huffman tree
@@ -201,8 +212,19 @@ trait Huffman extends HuffmanInterface {
    * This function encodes `text` using the code tree `tree`
    * into a sequence of bits.
    */
-  def encode(tree: CodeTree)(text: List[Char]): List[Bit] = ???
+  def encode(tree: CodeTree)(text: List[Char]): List[Bit] = text match {
+    case Nil => List()
+    case x :: xs => charBits(tree, x, List()) ::: encode(tree)(xs)
+  }
 
+  def charBits(tree: CodeTree,ch: Char, bits: List[Bit]): List[Bit] = tree match {
+    case Leaf(c,w) => if (c == ch) bits else List()
+    case Fork(l, r, c, w) => {
+      val L = charBits(l, ch, bits ::: List(0))
+      val R = charBits(r, ch, bits ::: List(1))
+      if (L != Nil) L else R
+    }
+  }
   // Part 4b: Encoding using code table
 
   type CodeTable = List[(Char, List[Bit])]
@@ -244,11 +266,25 @@ object Huffman extends Huffman
 object Main extends App {
   import Huffman._
   println("Test")
-  println(times(Huffman.string2Chars("banana")))
+  println(times(string2Chars("banana")))
   val charCountLst = times(string2Chars("bananaloaf"))
   println(makeOrderedLeafList(charCountLst))
   val leaflist = List(Leaf('e', 1), Leaf('t', 2), Leaf('x', 4))
   println(combine(leaflist))
   println(List(Fork(Leaf('e',1),Leaf('t',2),List('e', 't'),3), Leaf('x',4)) == combine(leaflist))
   println(until(singleton, combine)(leaflist))
+
+  println(createCodeTree(string2Chars("bananaloaf")))
+
+  val t1 = Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5)
+  val t2 = Fork(Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5), Leaf('d',4), List('a','b','d'), 9)
+
+  println(decode(t2, List(1))) // d
+  println(decode(t2, List(0,1))) // b
+
+  println(decodedSecret)
+
+  println(charBits(t2,'d', List()))
+  println("ab".toList == decode(t1, encode(t1)("ab".toList)))
+
 }
