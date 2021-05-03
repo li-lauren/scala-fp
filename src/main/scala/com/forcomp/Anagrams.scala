@@ -36,16 +36,19 @@ object Anagrams extends AnagramsInterface {
   def wordOccurrences(w: Word): Occurrences =
     if (w.isEmpty) List()
     else {
-      (w.toList.groupBy((ch => ch)) map getCharCounts).toList
+      val chs = w.toList
+      (chs.groupBy((ch => ch)) map getCharCounts).toList
     }
 
-  def getCharCounts(chAndChLst: (Char, List[Char])): (Char, Int) = {
-    val (ch, chLst) = chAndChLst
+  def getCharCounts(charCountMap: (Char, List[Char])): (Char, Int) = {
+    val (ch, chLst) = charCountMap
     ch -> chLst.length
   }
 
   /** Converts a sentence into its character occurrence list. */
-  def sentenceOccurrences(s: Sentence): Occurrences = ???
+  def sentenceOccurrences(s: Sentence): Occurrences =
+    wordOccurrences((s foldLeft "")(_ + _))
+
 
   /** The `dictionaryByOccurrences` is a `Map` from different occurrences to a sequence of all
    *  the words that have that occurrence count.
@@ -89,7 +92,22 @@ object Anagrams extends AnagramsInterface {
    *  Note that the order of the occurrence list subsets does not matter -- the subsets
    *  in the example above could have been displayed in some other order.
    */
-  def combinations(occurrences: Occurrences): List[Occurrences] = ???
+  def combinations(occurrences: Occurrences): List[Occurrences] =
+    (occurrences foldLeft List[Occurrences](List()))((acc, y) => combineOneChar(acc, combinationsPerChar(y)))
+
+  def combinationsPerChar(occurrence: (Char, Int)): List[Occurrences] = {
+    val (ch, freq) = occurrence
+    (for (i <- 1 to freq) yield List((ch, i))).toList
+  }
+
+  def combineOneChar(acc: List[Occurrences], charCombinations: List[Occurrences]): List[Occurrences] = {
+    val combos = for {
+      accOcc <- acc
+      charOcc <- charCombinations
+    } yield accOcc ::: charOcc
+    combos ::: acc
+  }
+
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
    *
@@ -169,4 +187,11 @@ object Dictionary {
 object Main extends App {
   import Anagrams._
   println(wordOccurrences("hello"))
+  val word1 = "blah"
+  val word2 = "blahblah"
+  println(word1 + word2)
+
+  //combinationsPerChar(('c', 3)) foreach println
+  //combinations(List(('a', 2))) foreach println
+  combinations(List(('a', 2), ('b', 2))) foreach println
 }
