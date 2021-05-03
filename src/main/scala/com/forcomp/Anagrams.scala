@@ -24,7 +24,7 @@ object Anagrams extends AnagramsInterface {
   /** The dictionary is simply a sequence of words.
    *  It is predefined and obtained as a sequence using the utility method `loadDictionary`.
    */
-  val dictionary: List[Word] = Dictionary.loadDictionary
+ // val dictionary: List[Word] = Dictionary.loadDictionary
 
   /** Converts the word into its character occurrence list.
    *
@@ -33,7 +33,16 @@ object Anagrams extends AnagramsInterface {
    *
    *  Note: you must use `groupBy` to implement this method!
    */
-  def wordOccurrences(w: Word): Occurrences = ???
+  def wordOccurrences(w: Word): Occurrences =
+    if (w.isEmpty) List()
+    else {
+      (w.toList.groupBy((ch => ch)) map getCharCounts).toList
+    }
+
+  def getCharCounts(chAndChLst: (Char, List[Char])): (Char, Int) = {
+    val (ch, chLst) = chAndChLst
+    ch -> chLst.length
+  }
 
   /** Converts a sentence into its character occurrence list. */
   def sentenceOccurrences(s: Sentence): Occurrences = ???
@@ -155,4 +164,9 @@ object Dictionary {
       wordstream.close()
     }
   }
+}
+
+object Main extends App {
+  import Anagrams._
+  println(wordOccurrences("hello"))
 }
